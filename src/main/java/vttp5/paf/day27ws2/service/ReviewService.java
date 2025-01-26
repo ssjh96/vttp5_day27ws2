@@ -5,14 +5,13 @@ import java.util.Date;
 import java.util.Optional;
 
 import org.bson.Document;
-
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import vttp5.paf.day27ws2.repository.ReviewRepo;
-import vttp5.paf.day27ws2.utils.Constant;
 
 @Service
 public class ReviewService {
@@ -41,8 +40,9 @@ public class ReviewService {
         // 2. Use JsonObjectBuilder and append as required after converting to Document
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
         JsonObject jReview = Json.createObjectBuilder()
-                                .add("_id", gameDoc.getObjectId("_id").toString()) 
+                                // .add("_id", gameDoc.getObjectId("_id").toString())  
                                 // This would not give ObjectId("") because it is save as a string and not a ObjectId object, but just the ""
+
                                 .add("user", user)
                                 .add("rating", rating)
                                 .add("comment", comment != null ? comment : "")
@@ -53,7 +53,8 @@ public class ReviewService {
                              
         // Insert review into MongoDB                       
         Document docReviewToInsert = Document.parse(jReview.toString());
-        docReviewToInsert.append("_id", gameDoc.getObjectId("_id")); // This will appear on top as it is unique primary
+        // docReviewToInsert.append("_id", gameDoc.getObjectId("_id")); // This will appear on top as it is unique primary
+        docReviewToInsert.append("_id", new ObjectId()); // Create new unique ObjectId for review
 
         reviewRepo.insertReview(docReviewToInsert);
        
@@ -64,5 +65,37 @@ public class ReviewService {
                                     .build();
             
         return jSuccess;
+    }
+
+    public JsonObject updateReview(String reviewId, Double newRating, String newComment)
+    {
+        // Validate input rating
+        if (newRating < 0 || newRating > 10)
+        {
+            JsonObject jError = Json.createObjectBuilder()
+                                    .add("error", "New rating must be between 0 and 10")
+                                    .build();
+            
+            return jError;
+        }
+        
+        // Fetch existing review
+        Optional<Document> optReviewDoc = reviewRepo.getReviewById(reviewId);
+
+        if (optReviewDoc.isEmpty())
+        {
+            JsonObject jError = Json.createObjectBuilder()
+                                    .add("error", "No review found for given review id")
+                                    .build();
+            
+            return jError;
+        }
+
+        // Create update document
+        Document existingReviewDoc = optReviewDoc.get();
+        Document edit = new Document()
+            .append(newComment, existingReviewDoc)
+
+
     }
 }
