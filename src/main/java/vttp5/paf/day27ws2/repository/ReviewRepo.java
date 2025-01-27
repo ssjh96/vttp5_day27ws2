@@ -114,12 +114,25 @@ public class ReviewRepo {
                 }
             })
      */
-    public long updateReview(String reviewId, Update updateOps)
+    public long updateReview(String reviewId, Document editedEntryDoc)
     {
         ObjectId reviewObjectId = new ObjectId(reviewId);
         Criteria criteria = Criteria.where("_id").is(reviewObjectId);
 
         Query query = Query.query(criteria);
+
+        String newComment = editedEntryDoc.getString("newComment");
+        Double newRating = editedEntryDoc.getDouble("newRating");
+        String postedDate = editedEntryDoc.getString("posted");
+
+        Update updateOps = new Update()
+            .set("comment", newComment)
+            .set("rating", newRating)
+            .set("posted", postedDate)
+            .push("edited", editedEntryDoc);
+            // push into "edited" array 
+            // Bson Array of Bson Objects when working w MongoDB
+            // In ava this corresponds to a list of Document objects, if JsonObject was constructed, we need to convert to Document by parsing
 
         UpdateResult result = template.updateFirst(query, updateOps, Document.class, Constant.C_REVIEWS);
 

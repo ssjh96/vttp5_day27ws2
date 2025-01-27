@@ -108,17 +108,8 @@ public class ReviewService {
             .append("rating", newRating)
             .append("posted", postedDate);
         
-        Update updateOps = new Update()
-            .set("comment", newComment)
-            .set("rating", newRating)
-            .set("posted", postedDate)
-            .push("edited", editedEntryDoc);
-            // push into "edited" array 
-            // Bson Array of Bson Objects when working w MongoDB
-            // In ava this corresponds to a list of Document objects, if JsonObject was constructed, we need to convert to Document by parsing
-            
         // Perform the update
-        long modifiedCount = reviewRepo.updateReview(reviewId, updateOps);
+        long modifiedCount = reviewRepo.updateReview(reviewId, editedEntryDoc);
         
         if (modifiedCount == 0)
         {
