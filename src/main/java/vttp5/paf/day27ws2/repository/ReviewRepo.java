@@ -3,6 +3,7 @@ package vttp5.paf.day27ws2.repository;
 import java.security.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import org.bson.Document;
@@ -125,6 +126,7 @@ public class ReviewRepo {
         Double newRating = editedEntryDoc.getDouble("newRating");
         String postedDate = editedEntryDoc.getString("posted");
 
+        // Set the new attributes and push the document into the array
         Update updateOps = new Update()
             .set("comment", newComment)
             .set("rating", newRating)
@@ -141,7 +143,50 @@ public class ReviewRepo {
         System.out.printf("upsert id: d \n", result.getUpsertedId());
 
         return result.getModifiedCount();
-
     }
+    
+
+    /*
+        db.getCollection("reviews")
+        .findOne( 
+            { _id: ObjectId("67978c0240bbbba22fc191b8") },
+            { edited : 1, _id : 0 } )
+     */
+    public Document getReviewHistory (String reviewId)
+    {
+        ObjectId revObjectId = new ObjectId(reviewId);
+
+        Criteria criteria = Criteria.where("_id").is(revObjectId);
+        Query query = Query.query(criteria);
+
+        query.fields()
+            .include("edited")
+            .exclude("_id");
+
+        Document result = template.findOne(query, Document.class, Constant.C_REVIEWS);
+
+        return result;
+    }
+
+    // Array of Bson Objects which corresponds to a list of documents in java
+    // { 
+    //     "edited" : [
+    //         {
+    //             "rating" : 1.8,
+    //             "comment" : "nani",
+    //             "posted" : "27-01-2025"
+    //         },
+    //         {
+    //             "rating" : NumberInt(2),
+    //             "comment" : "hello",
+    //             "posted" : "27-01-2025"
+    //         },
+    //         {
+    //             "rating" : 3.2,
+    //             "comment" : "bye",
+    //             "posted" : "27-01-2025"
+    //         }
+    //     ]
+    // }
     
 }

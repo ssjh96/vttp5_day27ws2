@@ -20,6 +20,8 @@ import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonReader;
 import vttp5.paf.day27ws2.service.ReviewService;
+import org.springframework.web.bind.annotation.GetMapping;
+
 
 
 @Controller
@@ -64,6 +66,33 @@ public class ReviewController {
         }
 
         return ResponseEntity.ok(result.toString());
+    }
+
+
+    @GetMapping(path = "/review/{reviewId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> getReviewById(@PathVariable String reviewId) 
+    {
+        JsonObject jResult = reviewService.getReviewById(reviewId);
+
+        if (jResult.containsKey("error"))
+        {
+            return ResponseEntity.badRequest().body(jResult.toString());
+        }
+
+        return ResponseEntity.ok(jResult.toString());
+    }
+    
+    @GetMapping(path = "/review/{reviewId}/history", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> getReviewHistoryById(@PathVariable String reviewId) 
+    {
+        JsonObject jResult = reviewService.getReviewHistoryById(reviewId);
+
+        if (jResult.containsKey("error"))
+        {
+            return ResponseEntity.badRequest().body(jResult.toString());
+        }
+
+        return ResponseEntity.ok(jResult.toString());
     }
     
 }
