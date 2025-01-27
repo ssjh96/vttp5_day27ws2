@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 import jakarta.json.Json;
@@ -67,6 +68,10 @@ public class ReviewService {
         return jSuccess;
     }
 
+
+
+
+
     public JsonObject updateReview(String reviewId, Double newRating, String newComment)
     {
         // Validate input rating
@@ -79,7 +84,7 @@ public class ReviewService {
             return jError;
         }
         
-        // Fetch existing review
+        // Fetch existing review document
         Optional<Document> optReviewDoc = reviewRepo.getReviewById(reviewId);
 
         if (optReviewDoc.isEmpty())
@@ -92,10 +97,42 @@ public class ReviewService {
         }
 
         // Create update document
-        Document existingReviewDoc = optReviewDoc.get();
-        Document edit = new Document()
-            .append(newComment, existingReviewDoc)
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+        String postedDate = sdf.format(new Date());
 
-
+        // Document existingReviewDoc = optReviewDoc.get();
+        Document editedEntryDoc = new Document()
+            // .append("comment", newComment != null ? newComment : existingReviewDoc.getString("comment"))
+            // .append("rating", newRating != null ? newRating : existingReviewDoc.getDouble("rating"))
+            .append("comment", newComment)
+            .append("rating", newRating)
+            .append("posted", postedDate);
+        
+        Update updateOps = new Update()
+            .set("comment", newComment)
+            .set("rating", newRating)
+            .set("posted", postedDate)
+            .push("edited", editedEntryDoc);
+            // push into "edited" array 
+            // Bson Array of Bson Objects when working w MongoDB
+            // In ava this corresponds to a list of Document objects, if JsonObject was constructed, we need to convert to Document by parsing
+            
+        // Perform the update
+        long modifiedCount = reviewRepo.updateReview(reviewId, updateOps);
+        
+        if (modifiedCount == 0)
+        {
+            JsonObject jError = Json.createObjectBuilder()
+                                    .add("error", "No modification done")
+                                    .build();
+            
+            return jError;
+        }
+        
+        JsonObject jSuccess = Json.createObjectBuilder()
+                                    .add("success", "Update completed")
+                                    .build();
+            
+        return jSuccess;
     }
 }

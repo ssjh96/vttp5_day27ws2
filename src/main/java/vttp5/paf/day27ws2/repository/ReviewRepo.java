@@ -12,7 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
+
+import com.mongodb.client.result.UpdateResult;
 
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
@@ -26,7 +29,7 @@ public class ReviewRepo {
 
     /*
         db.getCollection("games")
-            .findOne({"_id" : ObjectId('6790519247fc55943a3cf6d0')})
+            .findOne({"_id" : ObjectId('6790519247fc55943a3cf6d0')})    // find the game ObjectId
      */
     
     // Should be in gamerepo
@@ -46,7 +49,16 @@ public class ReviewRepo {
     }
 
 
-
+   /* db.getCollection("reviews")
+            .insert({
+                "user" : "sheryl",
+                "rating" : 1.3,
+                "comment" : "Not bad lah",
+                "ID" : "6790519247fc55943a3cc28b",      // game id 
+                "posted" : "27-01-2025",
+                "name" : "Samurai"                      // game name
+            }) 
+    */
     public Document insertReview(Document review)
     {
         
@@ -60,7 +72,7 @@ public class ReviewRepo {
 
     /*
         db.getCollection("reviews")
-            .findOne({"_id" : ObjectId('6790519247fc55943a3cf6d0')})
+            .findOne({"_id" : ObjectId('67978c1b40bbbba22fc191b9')})    // find the review ObjectId
      */
 
     public Optional<Document> getReviewById(String reviewId)
@@ -76,9 +88,47 @@ public class ReviewRepo {
         return Optional.ofNullable(result);
     }
 
-    public Document updateReview(Document update)
+
+
+    /*
+        db.getCollection("reviews")
+            .updateOne(
+            {_id : ObjectId("67978c0240bbbba22fc191b8")},
+            {
+                $set: 
+                {
+                    rating : 3.2,
+                    comment : "bye",
+                    posted : "27-01-2025"
+                },
+              
+                $push: 
+                {
+                    "edited" : 
+                    {
+                        rating : 3.2,
+                        comment : "bye",
+                        posted : "27-01-2025"
+                    }
+                
+                }
+            })
+     */
+    public long updateReview(String reviewId, Update updateOps)
     {
-        return null;
+        ObjectId reviewObjectId = new ObjectId(reviewId);
+        Criteria criteria = Criteria.where("_id").is(reviewObjectId);
+
+        Query query = Query.query(criteria);
+
+        UpdateResult result = template.updateFirst(query, updateOps, Document.class, Constant.C_REVIEWS);
+
+        System.out.printf("modified: d \n", result.getModifiedCount());
+        System.out.printf("matched: d \n", result.getMatchedCount());
+        System.out.printf("upsert id: d \n", result.getUpsertedId());
+
+        return result.getModifiedCount();
+
     }
     
 }
